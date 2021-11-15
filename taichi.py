@@ -1,6 +1,6 @@
-# 问题在126-140
+#问题在118--132行，test和cauchy_stress相等，但sym_eig得到的特征值和特征向量却不相等
 # 2D
-# 2021.11.15
+# 2021.11.9
 # damage
 import taichi as ti
 import numpy as np
@@ -13,21 +13,11 @@ dx = 1 / n_grid
 inv_dx = 1 / dx
 p_rho = 1e6
 # damage有关的参数
-l0 = dx / 2
-sigma_crit = 1e2
-eta = 1e2
-zeta = 1e2
-g = 1.0  # g(d) =
 E, nu = 4e3, 0.45  # Young's modulus and Poisson's ratio
 mu_0, lambda_0 = E / (2 * (1 + nu)), E * nu / (
     (1 + nu) * (1 - 2 * nu))  # Lame parameters
 dt = 1e-4
 particles = ti.Struct.field({
-    "major_direction_a": ti.types.vector(2, ti.f32),
-    "minor_direction_a": ti.types.vector(2, ti.f32),
-    "major_direction_alphas": ti.f32,
-    "minor_direction_alphas": ti.f32,
-    "residual_phase": ti.f32,
     "d": ti.f32,
     "vol": ti.f32,
     "position": ti.types.vector(2, ti.f32),
@@ -49,7 +39,8 @@ particle_num = ti.field(ti.i32, shape=())
 node_pos = ti.Vector.field(2, ti.f32, shape=(n_grid, n_grid))
 horizontal_stretch = ti.Vector.field(2, dtype=float, shape=())  # 水平拉伸
 cauchy_stress = ti.Matrix.field(2, 2, ti.f64, shape=())
-# ***************** 初始化 *************************
+
+# ***************** init *************************
 @ti.kernel
 def add_cuboid(position: ti.template(), length: float, height: float):
     for i in range(4800):
@@ -66,7 +57,6 @@ def add_cuboid(position: ti.template(), length: float, height: float):
             particles[i].lable_mark = 0
 
         # residual
-        particles[i].residual_phase = 0.0001
         particles[i].d = 0.0
         # 粒子体积
         particles[i].vol = (dx * 0.5) ** 2
@@ -92,6 +82,7 @@ def add_force():
 
 def init():
     add_cuboid(ti.Vector([0.2, 0.3]), 0.6, 0.2)
+
 # *************************************************
 
 
